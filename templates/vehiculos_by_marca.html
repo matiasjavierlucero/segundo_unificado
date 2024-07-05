@@ -1,0 +1,8 @@
+{% extends 'base_template.html' %}
+
+{% block content %}
+<h4>Listado de vehiculos de la marca {{marca}}</h4>
+    {% for vehiculo in vehiculos %}
+        <li> {{vehiculo.modelo}} - {{vehiculo.precio}} -{{vehiculo.anio_fabricacion}} -{{vehiculo.marca}} - {{vehiculo.tipo.nombre}} </li>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base_template.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+
+        <div class="col-6">
+            <h4>Crea un nuevo vehiculo</h4>
+            <form action="" method="post">
+                <input type="text" name="modelo" class="form-control mb-2" placeholder="Modelo">
+                <input type="number" name="precio" class="form-control mb-2" placeholder="Precio">
+                <input type="number" max="2024" min="2000" name="anio_fabricacion" class="form-control mb-2" placeholder="Año de Fabricacion">
+                <select name="marca" id="" class="form-control mb-2">
+                    {% for marca in marcas %}
+                        <option value="{{marca.id}}">{{marca.nombre}}</option>
+                    {% endfor %}
+                </select>
+                <select name="tipo" id="" class="form-control mb-2">
+                    {% for tipo in tipos %}
+                        <option value="{{tipo.id}}">{{tipo.nombre}}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-success">Guardar</button>
+            </form>
+        </div>
+
+        <div class="col-6">
+            <h4>Listado de Vehiculos</h4>
+            {% for vehiculo in vehiculos %}
+            <li> {{vehiculo.modelo}} - {{vehiculo.precio}} -{{vehiculo.anio_fabricacion}} -{{vehiculo.marca}} - {{vehiculo.tipo.nombre}} </li>
+            {% endfor %}
+        </div>
+    
+    </div>
+</div>
+    
+{% endblock %}

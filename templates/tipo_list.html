@@ -1,0 +1,7 @@
+{% extends 'base_template.html' %}
+
+{% block content %}
+    {% for tipo in tipos %}
+        <li> {{tipo.nombre}} </li>
+    {% endfor %}
+{% endblock %}
