@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request, redirect, url_for
 
 from flask_sqlalchemy import SQLAlchemy
@@ -10,6 +12,7 @@ app = Flask(__name__)
 # Configuracion de SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/repaso_flask_primer_semestre'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.urandom(24)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -22,8 +25,9 @@ def index():
 
 @app.route("/marca_list", methods=['POST', 'GET'])
 def marcas():   
-    marcas = Marca.query.all()
+    formulario = MarcaForm()
 
+    marcas = Marca.query.all()
     if request.method == 'POST':
         nombre = request.form['nombre']
         nueva_marca = Marca(nombre=nombre)
@@ -31,7 +35,11 @@ def marcas():
         db.session.commit()
         return redirect(url_for('marcas'))
 
-    return render_template('marca_list.html', marcas=marcas)
+    return render_template(
+        'marca_list.html',
+         marcas=marcas,
+         formulario=formulario
+        )
 
 @app.route("/marca/<id>/vehiculos")
 def vehiculos_por_marca(id):
