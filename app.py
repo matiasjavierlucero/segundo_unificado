@@ -17,6 +17,8 @@ migrate = Migrate(app, db)
 
 from models import Marca, Tipo, Vehiculo
 from forms import MarcaForm
+from services.marca_service import MarcaService
+from repositories.marca_repository import MarcaRepository
 
 @app.route("/")
 def index():
@@ -24,13 +26,14 @@ def index():
 
 @app.route("/marca_list", methods=['POST', 'GET'])
 def marcas():   
-    marcas = Marca.query.all()
+    marca_service = MarcaService(MarcaRepository())
+    marcas = marca_service.get_all()
+
     formulario = MarcaForm()
 
     if request.method == 'POST':
-        nueva_marca = Marca(nombre=formulario.nombre.data)
-        db.session.add(nueva_marca)
-        db.session.commit()
+        nombre=formulario.nombre.data
+        marca_service.create(nombre)
         return redirect(url_for('marcas'))
 
     return render_template(
