@@ -18,6 +18,8 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from models import Marca, Tipo, Vehiculo
+from services.marca_service import MarcaService
+from repositories.marca_repository import MarcaRepository
 
 @app.route("/")
 def index():
@@ -27,12 +29,12 @@ def index():
 def marcas():   
     formulario = MarcaForm()
 
-    marcas = Marca.query.all()
+    services = MarcaService(MarcaRepository())
+    marcas = services.get_all()
+
     if request.method == 'POST':
         nombre = request.form['nombre']
-        nueva_marca = Marca(nombre=nombre)
-        db.session.add(nueva_marca)
-        db.session.commit()
+        services.create(nombre=nombre)
         return redirect(url_for('marcas'))
 
     return render_template(
