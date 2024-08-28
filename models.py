@@ -28,3 +28,9 @@ class Vehiculo(db.Model):
     #Relacion directa con el otro objeto
     marca = db.relationship('Marca', backref=db.backref('vehiculos', lazy=True))
     tipo = db.relationship('Tipo', backref=db.backref('vehiculos', lazy=True))
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), nullable=False)
+    password_hash = db.Column(db.String(50), nullable=False)
