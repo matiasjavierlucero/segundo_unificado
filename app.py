@@ -1,6 +1,15 @@
 import os
 
-from flask import Flask, render_template, request, redirect, url_for
+from dotenv import load_dotenv
+
+from flask import (
+    Flask,
+    jsonify,
+    redirect,
+    render_template, 
+    request, 
+    url_for,
+)
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -8,17 +17,36 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 
 # Configuracion de SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/repaso_flask_primer_semestre'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'SQLALCHEMY_DATABASE_URI'
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.urandom(24)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from models import Marca, Tipo, Vehiculo
+from models import Marca, Tipo, Vehiculo, User
 from forms import MarcaForm
 from services.marca_service import MarcaService
 from repositories.marca_repository import MarcaRepository
+
+load_dotenv()
+
+
+@app.route('/users', methods=['POST'])
+def users():
+    data = request.get_json() #Recibo la data del post
+    usuario = data.get("username")
+    passw = data.get("password")
+
+    usuario = User(
+        username=usuario,
+        password_hash=passw
+    )
+    db.session.add(usuario)
+    db.session.commit()
+    return jsonify({"Objeto creado": usuario.username})
 
 @app.route("/")
 def index():
