@@ -1,6 +1,8 @@
 import os
 
-from flask import Flask, render_template, request, redirect, url_for
+from dotenv import load_dotenv
+
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -10,16 +12,41 @@ from forms import MarcaForm
 app = Flask(__name__)
 
 # Configuracion de SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/repaso_flask_primer_semestre'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'SQLALCHEMY_DATABASE_URI'
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.urandom(24)
+app.config['SECRET_KEY'] = os.environ.get(
+    'SECRET_KEY'
+)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from models import Marca, Tipo, Vehiculo
+from models import Marca, Tipo, Vehiculo, User
 from services.marca_service import MarcaService
 from repositories.marca_repository import MarcaRepository
+
+load_dotenv()
+
+@app.route('/users', methods=['POST'])
+def user():
+    data = request.get_json()
+    username = data.get('nombre_usuario')
+    password = data.get('password')
+
+    try:
+        nuevo_usuario = User(
+            username=username,
+            password_hash=password
+        )
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+
+        return jsonify({"Usuario Creado": username}), 201
+    except:
+        return jsonify({"Error": "Algo salio mal"})
+
 
 @app.route("/")
 def index():
