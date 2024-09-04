@@ -1,3 +1,4 @@
+import bcrypt
 import os
 
 from dotenv import load_dotenv
@@ -6,6 +7,13 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_jwt_extended import (
+    JWTManager,
+)
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash,
+)
 
 from forms import MarcaForm
 
@@ -22,6 +30,7 @@ app.config['SECRET_KEY'] = os.environ.get(
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+jwt = JWTManager(app)
 
 from models import Marca, Tipo, Vehiculo, User
 from services.marca_service import MarcaService
@@ -35,19 +44,39 @@ def user():
     username = data.get('nombre_usuario')
     password = data.get('password')
 
-    try:
-        nuevo_usuario = User(
-            username=username,
-            password_hash=password
-        )
-        db.session.add(nuevo_usuario)
-        db.session.commit()
+    password_hasheada = generate_password_hash(
+        password=password,
+        method='pbkdf2',
+        salt_length=8,
+    )
+    print(password_hasheada)
+    #try:
+    nuevo_usuario = User(
+        username=username,
+        password_hash=password_hasheada
+    )
+    db.session.add(nuevo_usuario)
+    db.session.commit()
 
-        return jsonify({"Usuario Creado": username}), 201
-    except:
-        return jsonify({"Error": "Algo salio mal"})
+    return jsonify({"Usuario Creado": username}), 201
+    #except:
+    #    return jsonify({"Error": "Algo salio mal"})
 
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('nombre_usuario')
+    password = data.get('password')
+
+    usuario = User.query.filter_by(username=username).first()
+
+    if usuario and check_password_hash(
+        pwhash=usuario.password_hash, password=password
+    ):
+        return jsonify({"Mensaje":"Usuario Logeado"})
+    return jsonify({"Mensaje":"NO MATCH"})
+    
 @app.route("/")
 def index():
     return render_template('index.html')
