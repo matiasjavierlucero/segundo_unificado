@@ -3,9 +3,12 @@ import os
 from dotenv import load_dotenv
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash,
+)
 
 from forms import MarcaForm
 
@@ -35,10 +38,16 @@ def user():
     username = data.get('nombre_usuario')
     password = data.get('password')
 
+    password_encrypted = generate_password_hash(
+        password=password,
+        method='pbkdf2',
+        salt_length=8,
+    )
+
     try:
         nuevo_usuario = User(
             username=username,
-            password_hash=password
+            password_hash=password_encrypted
         )
         db.session.add(nuevo_usuario)
         db.session.commit()
@@ -46,6 +55,21 @@ def user():
         return jsonify({"Usuario Creado": username}), 201
     except:
         return jsonify({"Error": "Algo salio mal"})
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('nombre_usuario')
+    password = data.get('password')
+
+    usuario = User.query.filter_by(username=username).first()
+
+    if usuario and check_password_hash(
+        pwhash=usuario.password_hash,
+        password=password
+    ):
+        return jsonify('Mensaje','Usuario Logeado')
+    return jsonify('Mensaje','La contraseña no coincide')
 
 
 @app.route("/")
