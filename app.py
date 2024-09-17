@@ -9,6 +9,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import (
     JWTManager,
+    get_jwt,
+    get_jwt_identity,
+    jwt_required,
 )
 from werkzeug.security import (
     generate_password_hash,
@@ -65,9 +68,9 @@ def user():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    username = data.get('nombre_usuario')
-    password = data.get('password')
+    data = request.authorization
+    username = data.username
+    password = data.password
 
     usuario = User.query.filter_by(username=username).first()
 
