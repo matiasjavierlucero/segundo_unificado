@@ -42,6 +42,9 @@ from models import Marca, Tipo, Vehiculo, User
 from services.marca_service import MarcaService
 from repositories.marca_repository import MarcaRepository
 
+from views import register_blueprints
+register_blueprints(app)
+
 load_dotenv()
 
 @app.route('/users', methods=['POST', 'GET'])
@@ -85,28 +88,6 @@ def user():
         )
     return jsonify(usuario_list)
 
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.authorization
-    username = data.username
-    password = data.password
-
-    usuario = User.query.filter_by(username=username).first()
-
-    if usuario and check_password_hash(
-        pwhash=usuario.password_hash, password=password
-    ):
-        access_token = create_access_token(
-            identity=username,
-            expires_delta=timedelta(minutes=10),
-            additional_claims=dict(
-                administador=usuario.is_admin
-            )
-        )
-        return jsonify({"Token": access_token})
-
-    return jsonify({"Mensaje":"NO MATCH"})
-    
 @app.route("/")
 def index():
     return render_template('index.html')
