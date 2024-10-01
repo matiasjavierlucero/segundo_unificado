@@ -14,6 +14,7 @@ from flask_jwt_extended import (
     get_jwt,
     get_jwt_identity,
     jwt_required,
+
 )
 from werkzeug.security import (
     generate_password_hash,
@@ -46,7 +47,7 @@ load_dotenv()
 @app.route('/users', methods=['POST', 'GET'])
 @jwt_required()
 def user():
-    
+   
     if request.method == 'POST':
         additional_data = get_jwt()
         administrador = additional_data.get('administrador')
@@ -103,6 +104,7 @@ def login():
             )
         )
         return jsonify({"Token": access_token})
+
     return jsonify({"Mensaje":"NO MATCH"})
     
 @app.route("/")
