@@ -46,28 +46,43 @@ load_dotenv()
 @app.route('/users', methods=['POST', 'GET'])
 @jwt_required()
 def user():
+    
     if request.method == 'POST':
-        data = request.get_json()
-        username = data.get('nombre_usuario')
-        password = data.get('password')
+        additional_data = get_jwt()
+        administrador = additional_data.get('administrador')
+        if administrador is True:
+            data = request.get_json()
+            username = data.get('nombre_usuario')
+            password = data.get('password')
 
-        password_hasheada = generate_password_hash(
-            password=password,
-            method='pbkdf2',
-            salt_length=8,
-        )
-        try:
-            nuevo_usuario = User(
-                username=username,
-                password_hash=password_hasheada
+            password_hasheada = generate_password_hash(
+                password=password,
+                method='pbkdf2',
+                salt_length=8,
             )
-            db.session.add(nuevo_usuario)
-            db.session.commit()
+            try:
+                nuevo_usuario = User(
+                    username=username,
+                    password_hash=password_hasheada
+                )
+                db.session.add(nuevo_usuario)
+                db.session.commit()
 
-            return jsonify({"Usuario Creado": username}), 201
-        except:
-            return jsonify({"Error": "Algo salio mal"})
-    return jsonify({"Mensaje":"AQUI IRIAN LOS USUARIOS"})
+                return jsonify({"Usuario Creado": username}), 201
+            except:
+                return jsonify({"Error": "Algo salio mal"})
+        return jsonify(Mensaje="Ud no esta habilitado para crear un usuario")
+    usuarios = User.query.all()
+    usuario_list = []
+    for usuario in usuarios:
+        usuario_list.append(
+            dict(
+                username=usuario.username,
+                is_admin=usuario.is_admin,
+                id=usuario.id
+            )
+        )
+    return jsonify(usuario_list)
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -82,7 +97,10 @@ def login():
     ):
         access_token = create_access_token(
             identity=username,
-            expires_delta=timedelta(minutes=2)
+            expires_delta=timedelta(minutes=10),
+            additional_claims=dict(
+                administador=usuario.is_admin
+            )
         )
         return jsonify({"Token": access_token})
     return jsonify({"Mensaje":"NO MATCH"})
