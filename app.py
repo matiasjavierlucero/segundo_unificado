@@ -1,5 +1,6 @@
 import bcrypt
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -9,6 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import (
     JWTManager,
+    get_jwt,
+    get_jwt_identity,
+    jwt_required,
+    create_access_token,
 )
 from werkzeug.security import (
     generate_password_hash,
@@ -38,43 +43,49 @@ from repositories.marca_repository import MarcaRepository
 
 load_dotenv()
 
-@app.route('/users', methods=['POST'])
+@app.route('/users', methods=['POST', 'GET'])
+@jwt_required()
 def user():
-    data = request.get_json()
-    username = data.get('nombre_usuario')
-    password = data.get('password')
+    if request.method == 'POST':
+        data = request.get_json()
+        username = data.get('nombre_usuario')
+        password = data.get('password')
 
-    password_hasheada = generate_password_hash(
-        password=password,
-        method='pbkdf2',
-        salt_length=8,
-    )
-    print(password_hasheada)
-    #try:
-    nuevo_usuario = User(
-        username=username,
-        password_hash=password_hasheada
-    )
-    db.session.add(nuevo_usuario)
-    db.session.commit()
+        password_hasheada = generate_password_hash(
+            password=password,
+            method='pbkdf2',
+            salt_length=8,
+        )
+        try:
+            nuevo_usuario = User(
+                username=username,
+                password_hash=password_hasheada
+            )
+            db.session.add(nuevo_usuario)
+            db.session.commit()
 
-    return jsonify({"Usuario Creado": username}), 201
-    #except:
-    #    return jsonify({"Error": "Algo salio mal"})
-
+            return jsonify({"Usuario Creado": username}), 201
+        except:
+            return jsonify({"Error": "Algo salio mal"})
+    return  jsonify({"Usuario Creado": "ACA IRIA EL LISTADO"}), 200
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    username = data.get('nombre_usuario')
-    password = data.get('password')
+    data = request.authorization
+    username = data.username
+    password = data.password
 
     usuario = User.query.filter_by(username=username).first()
 
     if usuario and check_password_hash(
         pwhash=usuario.password_hash, password=password
     ):
-        return jsonify({"Mensaje":"Usuario Logeado"})
+        access_token = create_access_token(
+            identity=username,
+            expires_delta=timedelta(minutes=3)
+        )
+        
+        return jsonify({"Mensaje":f"Token {access_token}"})
     return jsonify({"Mensaje":"NO MATCH"})
     
 @app.route("/")
