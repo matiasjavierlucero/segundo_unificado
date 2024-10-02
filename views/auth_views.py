@@ -14,7 +14,7 @@ from werkzeug.security import (
 )
 from app import db
 from models import User
-from schemas import UserSchema
+from schemas import UserSchema, MinimalUserSchema
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -22,10 +22,9 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/users', methods=['POST', 'GET'])
 @jwt_required()
 def user():
-   
+    additional_data = get_jwt()
+    administrador = additional_data.get('administrador')
     if request.method == 'POST':
-        additional_data = get_jwt()
-        administrador = additional_data.get('administrador')
         if administrador is True:
             data = request.get_json()
             username = data.get('nombre_usuario')
@@ -48,9 +47,12 @@ def user():
             except:
                 return jsonify({"Error": "Algo salio mal"})
         return jsonify(Mensaje="Ud no esta habilitado para crear un usuario")
-    
-    usuarios = User.query.all()
-    return UserSchema().dump(usuarios, many=True)
+    if administrador is True:
+        usuarios = User.query.all()
+        return UserSchema().dump(usuarios, many=True)
+    else:
+        usuarios = User.query.all()
+        return MinimalUserSchema().dump(usuarios, many=True)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
