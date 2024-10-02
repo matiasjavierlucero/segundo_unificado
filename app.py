@@ -9,7 +9,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import (
     JWTManager
 )
-
+from flask_marshmallow import Marshmallow
 
 app = Flask(__name__)
 
@@ -25,6 +25,7 @@ app.config['SECRET_KEY'] = os.environ.get(
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
+ma = Marshmallow(app)
 
 load_dotenv()
 

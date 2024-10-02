@@ -14,6 +14,7 @@ from werkzeug.security import (
 )
 from app import db
 from models import User
+from schemas import UserSchema
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -47,17 +48,9 @@ def user():
             except:
                 return jsonify({"Error": "Algo salio mal"})
         return jsonify(Mensaje="Ud no esta habilitado para crear un usuario")
+    
     usuarios = User.query.all()
-    usuario_list = []
-    for usuario in usuarios:
-        usuario_list.append(
-            dict(
-                username=usuario.username,
-                is_admin=usuario.is_admin,
-                id=usuario.id
-            )
-        )
-    return jsonify(usuario_list)
+    return UserSchema().dump(usuarios, many=True)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
