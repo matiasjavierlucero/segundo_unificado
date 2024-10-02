@@ -2,10 +2,8 @@ from datetime import timedelta
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
-    JWTManager,
     create_access_token,
     get_jwt,
-    get_jwt_identity,
     jwt_required,
 
 )
@@ -13,8 +11,9 @@ from werkzeug.security import (
     generate_password_hash,
     check_password_hash,
 )
-
+from app import db
 from models import User
+from schemas import UserSchema, MinimalUserSchema
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -40,3 +39,39 @@ def login():
 
     return jsonify({"Mensaje":"NO MATCH"})
     
+
+@auth_bp.route('/users', methods=['POST', 'GET'])
+@jwt_required()
+def user():
+    additional_data = get_jwt()
+    print(additional_data)
+    administrador = additional_data.get('administador')
+    if request.method == 'POST': 
+        if administrador is True:
+            data = request.get_json()
+            username = data.get('nombre_usuario')
+            password = data.get('password')
+
+            password_hasheada = generate_password_hash(
+                password=password,
+                method='pbkdf2',
+                salt_length=8,
+            )
+            try:
+                nuevo_usuario = User(
+                    username=username,
+                    password_hash=password_hasheada
+                )
+                db.session.add(nuevo_usuario)
+                db.session.commit()
+
+                return jsonify({"Usuario Creado": username}), 201
+            except:
+                return jsonify({"Error": "Algo salio mal"})
+        return jsonify(Mensaje="Ud no esta habilitado para crear un usuario")
+    usuarios = User.query.all()
+    print(administrador is True)
+    if administrador is True:
+        return UserSchema().dump(obj=usuarios, many=True)
+    else:
+        return MinimalUserSchema().dump(obj=usuarios, many=True)
